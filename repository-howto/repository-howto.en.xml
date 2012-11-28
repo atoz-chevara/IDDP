@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+     "http://docbook.org/xml/4.2/docbookx.dtd">
+<article>
+  <articleinfo>
+    <title>Debian Repository HOWTO (Obsolete Documentation)</title>
+
+    <author>
+      <firstname>Aaron</firstname>
+      <surname>Isotton</surname>
+      <affiliation>
+        <address><email>aaron@isotton.com</email></address>
+      </affiliation>
+    </author>
+
+    <abstract>
+      <para>This document explains what a Debian repository is and how
+        you can set up one.</para>
+    </abstract>
+  </articleinfo>
+  
+  <section id="intro">
+    <title>Introduction</title>
+
+    <para>A Debian repository is a set of Debian packages organized in
+      a special directory tree which also contains a few additional
+      files containing indexes and checksums of the packages.  If a
+      user adds a repository to his
+      <filename>/etc/apt/sources.list</filename> file, he can easily
+      view and install all the packages available in it just like the
+      packages contained in Debian.</para>
+
+    <para>A repository can be both online and offline (for example on
+      a CD-ROM), although the former is the more common case.</para>
+
+    <para>This document explains how Debian repositories work, how
+      to create them, and how to add them to the
+      <filename>sources.list</filename> correctly.</para>
+
+    <para>This document's master location is <ulink
+        url="http://www.isotton.com/debian/docs/repository-howto/"/>.</para>
+
+    <section id="copyright">
+      <title>Copyright and License</title>
+
+      <para>This document, <emphasis>Debian Repository
+          HOWTO</emphasis>, is copyrighted (c) 2002-2003 by
+          <emphasis>Aaron Isotton</emphasis>.  Permission is granted
+          to copy, distribute and/or modify this document under the
+          terms of the GNU Free Documentation License, Version 1.1 or
+          any later version published by the Free Software Foundation;
+          with no Invariant Sections, with no Front-Cover Texts, and
+          with no Back-Cover Texts.</para>
+    </section> <!-- copyright  -->
+
+    <section id="feedback">
+      <title>Feedback</title>
+
+      <para>
+        Feedback is most certainly welcome for this document. Send
+        your additions, comments and criticisms to the following email
+        address: <email>aaron@isotton.com</email>.
+      </para>
+    </section> <!-- feedback -->
+  </section> <!-- intro -->
+
+  <section id="terms">
+    <title>Terms Used in this Document</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>distributions</term>
+
+        <listitem><para>The three Debian distributions:
+          <emphasis>stable</emphasis>, <emphasis>testing</emphasis>
+          and <emphasis>unstable</emphasis>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>index files</term>
+
+        <listitem><para>The <filename>Packages.gz</filename> and
+            <filename>Sources.gz</filename> files.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </section>
+
+  <section id="how-it-works">
+    <title>How Repositories Work</title>
+
+    <para>A repository consists of at least one directory with some
+      DEB packages in it, and two special files:
+      <filename>Packages.gz</filename> for the binary packages, and
+      <filename>Sources.gz</filename> for the source packages.</para>
+
+    <para>If your repository is listed correctly in
+      <filename>sources.list</filename> (more on that later),
+      <command>apt-get</command> will fetch the
+      <filename>Packages.gz</filename> index if the binary packages
+      are listed (with the <literal>deb</literal> keyword) and
+      <filename>Sources.gz</filename> if the sources are listed (with
+      the <literal>deb-src</literal> keyword).</para>
+
+    <para><filename>Packages.gz</filename> contains the name, version,
+      size, the short and the long description, and the dependencies
+      of each package, plus some additional information which is not
+      of interest for us.  All that information is listed (and used
+      by) the Debian package managers such as
+      <command>dselect</command> or
+      <command>aptitude</command>.</para>
+
+    <para><filename>Sources.gz</filename> contains the name, version
+      and the build dependencies (the packages needed to build) of
+      each package (plus some information which is not of interest for
+      us, too); that information is used by <command>apt-get
+      source</command> and similar tools.</para>
+
+    <para>There's an optional <filename>Release</filename> file
+      containing some informations about your repository; that is used
+      for <emphasis>Pinning</emphasis>, an interesting trick I won't
+      go into in this document.  You can read more about pinning in
+      the <ulink
+      url="http://www.debian.org/doc/manuals/apt-howto/">APT
+      HOWTO</ulink>.</para>
+
+    <para>Thus, once you have set up your repository, you can list and
+      install all of your packages together with the ones in Debian;
+      if you update a package, it'll be upgraded when the user runs
+      <command>apt-get update &amp;&amp; apt-get upgrade</command>; and every user will be able
+      to easily see a short description and other important
+      information about your packages.</para>
+
+    <para>But there's more to it.  If created properly, repositories
+      can offer different packages for each supported distribution and
+      for each of the (currently eleven) supported architectures;
+      <literal>apt</literal> will automatically fetch the right one
+      for a user's machine, without him even having to know about all
+      the different architectures.  It also allows you to group your
+      packages into components, just as Debian's packages are divided
+      into <literal>main</literal>, <literal>non-free</literal> and
+      <literal>contrib</literal>.  So, especially if your software is
+      cross-platform, you'll love package repositories.</para>
+
+  </section> <!-- how-it-works -->
+
+  <section id="setting-up">
+    <title>How to Set Up a Repository</title>
+
+    <para>There are two types of repositories: more complex ones where
+      the user has only to specify the base path to the repository,
+      the distribution and the components he wants (apt will
+      automatically fetch the ones for the right architecture, if
+      available), and simpler ones where the user has to specify an
+      exact path (and apt will do no magic to find out which packages
+      are the right ones).  The former are a bit more complex to set
+      up, but easier to use, and should always be used for complex
+      and/or cross platform repositories; the latter are simpler to
+      set up, but should only be used for small or single-architecture
+      repositories.</para>
+
+    <para>Although it is not really correct, I'll call the former
+      <emphasis>Automatic Repositories</emphasis> and the latter
+      <emphasis>Trivial Repositories</emphasis>.</para>
+    <section>
+
+      <title>Automatic Repositories</title>
+
+      <para>The directory structure of an automatic repository with
+        the standard Debian architectures and components looks like
+        this:</para>
+
+      <example id="debian-repository-example">
+        <title>A Standard Debian Repository</title>
+
+      <screen>(your repository root) 
+| 
++-dists
+  | 
+  |-stable
+  | |-main
+  | | |-binary-alpha 
+  | | |-binary-arm
+  | | |-binary-...
+  | | +-source 
+  | |-contrib
+  | | |-binary-alpha 
+  | | |-binary-arm
+  | | |-binary-...
+  | | +-source 
+  | +-non-free
+  |   |-binary-alpha
+  |   |-binary-arm
+  |   |-binary-...
+  |   +-source
+  |
+  |-testing 
+  | |-main
+  | | |-binary-alpha 
+  | | |-binary-arm
+  | | |-binary-...
+  | | +-source 
+  | |-contrib
+  | | |-binary-alpha 
+  | | |-binary-arm
+  | | |-binary-...
+  | | +-source 
+  | +-non-free
+  |   |-binary-alpha
+  |   |-binary-arm
+  |   |-binary-...
+  |   +-source
+  |
+  +-unstable 
+    |-main
+    | |-binary-alpha 
+    | |-binary-arm
+    | |-binary-...
+    | +-source 
+    |-contrib
+    | |-binary-alpha 
+    | |-binary-arm
+    | |-binary-...
+    | +-source 
+    +-non-free
+      |-binary-alpha
+      |-binary-arm
+      |-binary-...
+      +-source</screen>
+
+      </example>
+
+      <para>The free packages go into <literal>main</literal>; the
+        non-free ones into <literal>non-free</literal>, and the free
+        ones which depend on non-free ones into
+        <literal>contrib</literal>.  Debian currently supports 11
+        architectures; I've omitted most of them for the sake of
+        brevity.
+      </para>
+
+      <para>Each <filename>binary-*</filename> directory contains a
+        <filename>Packages.gz</filename> and an optional
+        <filename>Release</filename> file; each
+        <filename>source</filename> directory contains a
+        <filename>Sources.gz</filename> and an optional
+        <filename>Release</filename> file.  Notice that the
+        packages do not have to be in the same
+        directory as the index files, because the index files contain
+        paths to the individual packages; in fact, they could be
+        <emphasis>anywhere</emphasis> else in the repository.  This
+        makes it possible to create <link
+        linkend="pools">pools</link>.</para>
+
+      <para>You are free to create as many distributions and
+        components and to call them as you wish; the ones I used in
+        the example are just the ones used in Debian.  You could, for
+        example, create the distributions <literal>current</literal>
+        and <literal>beta</literal> (instead of
+        <literal>stable</literal>, <literal>testing</literal> and
+        <literal>unstable</literal>), and the components
+        <literal>foo</literal>, <literal>bar</literal>,
+        <literal>baz</literal> and <literal>qux</literal> (instead of
+        <literal>main</literal>, <literal>contrib</literal> and
+        <literal>non-free</literal>).</para>
+
+      <para>While you are free to call the components as you want, it
+        is generally a good idea to use the standard Debian
+        distributions, because that's what Debian users expect.</para>
+
+      </section>
+
+    <section>
+
+      <title>Trivial Repositories</title>
+
+      <para>Trivial repositories consist of one root directory and of
+        as many subdirectories as you wish.  As the users have to
+        specify the path to the root of the repository and the
+        relative path between the root and the directory with the
+        index files in it, you are free to do whatever you want (even
+        to put everything into the root of the repository; then, the
+        relative path will be simply
+        <quote><filename>/</filename></quote>).</para>
+
+      <example id="trivial-example">
+        <title>A Trivial Repository with Two Subdirectories</title>
+        
+        <screen>(your repository root)
+|
+|-binary
++-source</screen>
+      </example>
+
+    </section>
+
+    <section>
+      <title>Creating the Index Files</title>
+
+      <para><command>dpkg-scanpackages</command> generates the
+        <filename>Packages</filename> file and
+        <command>dpkg-scansources</command> the
+        <filename>Sources</filename> file.</para>
+
+      <para>They both send their output to stdout; thus, to generate
+        compressed files, you can use a command chain like this one:
+        <command>dpkg-scanpackages
+        <replaceable>arguments</replaceable> | gzip -9c &gt;
+        Packages.gz</command>.</para>
+
+      <para>The two tools work the same way; they both take two
+        arguments (in reality there are more, but I won't go into that
+        here; you can read the manpages if you want to know more); the
+        first the directory under which the packages are, and the
+        second is the <emphasis>override file</emphasis>.  We don't
+        need override files for simple repositories, but as it is a
+        required argument, we simply pass
+        <literal>/dev/null</literal>.</para>
+
+      <para><command>dpkg-scanpackages</command> scans the
+        <filename>.deb</filename> packages;
+        <command>dpkg-scansources</command> scans the
+        <filename>.dsc</filename> files.  It is thus necessary to put
+        the <filename>.orig.gz</filename>,
+        <filename>.diff.gz</filename> and <filename>.dsc</filename>
+        files together.  The <filename>.changes</filename> files are
+        not needed.</para>
+
+      <para>Thus, if you have a trivial repository such as the one
+          from <xref linkend="trivial-example"/>, you can create the
+          two index files as follows:</para>
+      
+      <screen>$ cd my-repository
+$ dpkg-scanpackages binary /dev/null | gzip -9c &gt; binary/Packages.gz
+$ dpkg-scansources source /dev/null | gzip -9c &gt; source/Sources.gz</screen>
+
+      <para>If you have a repository as complex as the one in <xref
+          linkend="debian-repository-example"/>, you'll have to write
+          some scripts to automate this process.</para>
+
+      <para>You could also use the
+        <replaceable>pathprefix</replaceable> argument of the two
+        tools to simplify the syntax a bit; I leave this as an
+        exercise for the reader.  (It's documented in the
+        manpages).</para>
+    </section>
+
+    <section id="release">
+      <!-- todo: Release should be between <filename> tags, but then
+      xmltex won't compile it --> 
+      <title>Creating the Release files</title>
+
+      <para>If you want to enable the users of your repository to use
+        <emphasis>Pinning</emphasis> with your repository, you must
+        include a <filename>Release</filename> file in every directory
+        containing an index file.  (You can read more about pinning in
+        the <ulink
+        url="http://www.debian.org/doc/manuals/apt-howto/">APT
+        HOWTO</ulink>).</para>
+
+      <para>The <filename>Release</filename> files are simple and
+        short text files of the following form:</para>
+
+      <screen>Archive: <replaceable>archive</replaceable>
+Component: <replaceable>component</replaceable>
+Origin: <replaceable>YourCompany</replaceable>
+Label: <replaceable>YourCompany Debian repository</replaceable>
+Architecture: <replaceable>architecture</replaceable></screen>
+
+      <variablelist>
+        <varlistentry>
+          <term><literal>Archive</literal></term>
+
+          <listitem>
+            <para>The name of the distribution of Debian the packages
+              in this directory belong to (or are designed for),
+              i.e. <literal>stable</literal>,
+              <literal>testing</literal> or
+              <literal>unstable</literal>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>Component</literal></term>
+
+          <listitem>
+            <para>The component of the packages in the directory, for
+            example <literal>main</literal>,
+            <literal>non-free</literal>, or
+            <literal>contrib</literal>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>Origin</literal></term>
+
+          <listitem>
+            <para>The name of who made the packages.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>Label</literal></term>
+
+          <listitem>
+            <para>Some label adequate for the packages or for your
+              repository.  Use your fantasy.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>Architecture</literal></term>
+
+          <listitem>
+            <para>The architecture of the packages in this directory,
+              such as <literal>i386</literal>,
+              <literal>sparc</literal> or
+              <literal>source</literal>.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para>It is important to get <literal>Archive</literal> and
+        <literal>Architecture</literal> right, as they're most used for
+        pinning.  The others are less important.</para>
+    </section>
+
+    <section id="pools">
+      <title>Creating Pools</title>
+
+      <para>With automatic repositories, distributing the packages in
+        the different directories will quickly lead to an unmanageable
+        beast.  It is also a waste of space and bandwidth, as there
+        are many packages (for example documentation packages) which
+        are the same for all architectures.</para>
+
+      <para>In these cases, a possible solution is a
+        <emphasis>pool</emphasis>. A pool is an additional directory
+        under the repository root containing <emphasis>all</emphasis>
+        packages (the binaries for all architectures, distributions,
+        and components, and all the sources).  Through a smart
+        combination of override files (which are not covered in this
+        document) and of scripts many problems can be avoided.  A nice
+        example of a pooled repository is the Debian repository
+        itself.</para>
+
+      <para>Pools are only useful for big repositories; I've never
+        made one and I don't think I'll need to in the near future,
+        and that's why I don't explain how to make one here.  If you
+        think that such a section should be added, feel free to write
+        one, and contact me.</para>
+
+    </section>
+
+    <section>
+      <title>Tools</title>
+
+      <para>There are various tools to automate and ease the creation
+        of Debian archives; I've listed the most notable of them
+        here.</para>
+
+      <para><command>apt-ftparchive</command> is used to move a
+        collection of Debian package files into a proper archive
+        hierarchy as is used in the official Debian archive.  
+       (sic. This is not correct now at least in 2009.  
+       It merely creates index files which can be used by APT clients.)  It is
+        part of the <literal>apt-utils</literal> package.</para>
+
+      <para><command>apt-move</command> is used to move a collection
+        of Debian package files into a proper archive hierarchy as is
+        used in the official Debian archive.</para>
+
+    </section>
+
+  </section> <!-- setting-up -->
+
+  <section id="using-a-repository">
+    <title>Using a Repository</title>
+
+    <para>Using a repository is very simple, but it depends on what
+      type of repository you have made: binary or source, and
+      automatic or trivial.</para>
+
+    <para>Each repository gets one line in
+      <filename>sources.list</filename>; for a binary one, you use the
+      <literal>deb</literal> command, and for a source one a
+      <literal>deb-src</literal> command.</para>
+
+    <para>Each line has the following syntax:
+
+      <screen>deb|deb-src <replaceable>uri</replaceable> <replaceable>distribution</replaceable> [<replaceable>component1</replaceable>] [<replaceable>component2</replaceable>] [...]</screen>
+
+      The <replaceable>uri</replaceable> is the URI of the root of the
+      repository, such as
+      <literal>ftp://ftp.yoursite.com/debian</literal>,
+      <literal>http://yoursite.com/debian</literal>, or, for local
+      files,
+      <literal>file::///home/joe/my-debian-repository</literal>.  The
+      trailing slash is optional.</para>
+
+    <para>For automatic repositories, you must specify one
+      distribution and one or more components; the distribution must
+      not end in a slash.</para>
+
+    <example>
+      <!-- todo: sources.list should be tagged as <filename>, but xmltex
+      doesn't support that -->
+      <title>Two Automatic Repositories from my sources.list</title>
+
+      <screen>deb ftp://sunsite.cnlab-switch.ch/mirror/debian/ unstable main contrib non-free
+deb-src ftp://sunsite.cnlab-switch.ch/mirror/debian/ unstable main contrib non-free</screen>
+
+      <para>These two lines specify an automatic binary and source
+      repository with root
+      <literal>ftp://sunsite.cnlab-switch.ch/mirror/debian/</literal>,
+      the distribution <literal>unstable</literal> and the components
+      <literal>main</literal>, <literal>contrib</literal> and
+      <literal>non-free</literal>.</para>
+    </example>
+
+    <para>If the repository is not automatic, then the
+      <emphasis>distribution</emphasis> specifies the relative path to
+      the index files and must end with a slash, and no components may
+      be specified.</para>
+
+    <example>
+      <title>Two Trivial Repositories from my
+      <filename>sources.list</filename></title>
+
+      <screen>deb file:///home/aisotton/rep-exact binary/
+deb-src file:///home/aisotton/rep-exact source/</screen>
+
+      <para>The first of these two lines specifies a binary repository
+        in <filename>/home/aisotton/rep-exact/binary</filename> on my
+        local machine; the second specifies a source repository in
+        <filename>/home/aisotton/rep-exact/source</filename>.</para>
+    </example>
+  </section> <!-- using-a-repository -->
+
+  <section>
+    <title>See Also</title>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <command>apt-ftparchive</command>
+        documentation.</para>
+      </listitem>
+
+      <listitem>
+        <para>The <command>apt-get</command> documentation, and the
+        documentation for <literal>apt</literal>.</para>
+      </listitem>
+
+      <listitem>
+        <para>The <command>apt-move</command> documentation.</para>
+      </listitem>
+
+      <listitem>
+        <para><ulink url="http://www.apt-get.org/"/> for many examples
+          of real-world repositories.</para>
+      </listitem>
+        
+      <listitem>
+        <para>The <ulink
+            url="http://www.debian.org/doc/manuals/apt-howto/">APT
+            HOWTO</ulink>.</para>
+      </listitem>
+
+
+      <listitem>
+        <para>The <command>dpkg-scanpackages</command>
+          documentation.</para>
+      </listitem>
+
+      <listitem>
+        <para>The <command>dpkg-scansources</command>
+          documentation.</para>
+      </listitem>
+
+      <listitem>
+        <para>The <literal>sources.list(5)</literal> manpage.</para>
+      </listitem>
+    </itemizedlist>
+
+  </section>
+</article>
