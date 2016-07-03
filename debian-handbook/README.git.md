@@ -9,7 +9,7 @@ Learn git
 
 If you don't know Git, please take the time to read a good tutorial:
 
-$ man gittutorial
+    $ man gittutorial
 
 If you want a full book, you can checkout http://progit.org
 
@@ -18,16 +18,18 @@ Configure git
 
 Ensure you have properly configured Git with you real name and your email:
 
-$ git config --global user.name "Your Complete Name"
-$ git config --global user.email "your@email"
+    $ git config --global user.name "Your Complete Name"
+    $ git config --global user.email "your@email"
 
 Retrieving the sources
 ----------------------
 Read-only anonymous access:
-$ git clone git://anonscm.debian.org/debian-handbook/debian-handbook.git
+
+    $ git clone git://anonscm.debian.org/debian-handbook/debian-handbook.git
 
 SSH access for contributors with write access:
-$ git clone git+ssh://git.debian.org/git/debian-handbook/debian-handbook.git
+
+    $ git clone git+ssh://git.debian.org/git/debian-handbook/debian-handbook.git
 
 Updating your working copy
 --------------------------
@@ -57,16 +59,19 @@ differing username and the installation of your public SSH key).
 
 Once you have been added to the project, you can use this Git url to
 clone the repository and push your changes:
-git+ssh://git.debian.org/git/debian-handbook/debian-handbook.git
+
+    git+ssh://git.debian.org/git/debian-handbook/debian-handbook.git
 
 If you already have cloned a repository from the read-only URL
 you can update the URL with this command:
-$ git remote set-url origin git+ssh://git.debian.org/git/debian-handbook/debian-handbook.git
+
+    $ git remote set-url origin git+ssh://git.debian.org/git/debian-handbook/debian-handbook.git
 
 Before pushing changes to the official repository, please double
 check what you're about to push with this command for example (you can
 add -p if you want to see the details of the changes):
-$ git log --stat @{u}..HEAD
+
+    $ git log --stat @{u}..HEAD
 (This command assumes that you're going to push the current branch).
 
 If needed, use "git rebase -i" to clean the set of commits that you're
