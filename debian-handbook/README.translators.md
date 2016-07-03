@@ -101,9 +101,9 @@ Then add a pt-BR/README file where you put:
   vocabulary, etc.
 
 
-    $ vim pt-BR/README
-    $ git add pt-BR/README
-    $ git commit -m "pt-BR: Add initial README file"
+        $ vim pt-BR/README
+        $ git add pt-BR/README
+        $ git commit -m "pt-BR: Add initial README file"
 
 You can certainly write that README file in your native language if you
 want but it's highly recommended to also have an English translation of
