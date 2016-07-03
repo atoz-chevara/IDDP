@@ -4,7 +4,7 @@ Notes for translators
 This book and its translations are managed with Publican [1]. It also uses
 a custom publican brand available in the Debian package publican-debian.
 
-$ sudo apt-get install publican publican-debian
+    $ sudo apt-get install publican publican-debian
 
 [1] https://fedorahosted.org/publican/
 
@@ -65,9 +65,11 @@ branch. Otherwise you can use one of those commands to clone the
 repository and start on the correct branch:
 
 Read-only anonymous access:
-$ git clone git://anonscm.debian.org/debian-handbook/debian-handbook.git -b squeeze/master
+
+    $ git clone git://anonscm.debian.org/debian-handbook/debian-handbook.git -b squeeze/master
 SSH access for contributors with Write access:
-$ git clone git+ssh://git.debian.org/git/debian-handbook/debian-handbook.git -b squeeze/master
+
+    $ git clone git+ssh://git.debian.org/git/debian-handbook/debian-handbook.git -b squeeze/master
 
 How to start a new translation
 ------------------------------
@@ -80,13 +82,14 @@ http://jfearn.fedorapeople.org/en-US/Publican/2.7/html/Users_Guide/appe-Users_Gu
 
 Then if this Git repository doesn't have any directory of this name,
 you need to create the initial translation files:
-$ publican update_po --langs=pt-BR
+
+    $ publican update_po --langs=pt-BR
 
 Now you have lots of PO files in pt-BR/*.po that you can translate.
 You should probably commit the empty PO files before going further.
 
-$ git add pt-BR/*.po
-$ git commit -m "pt-BR: Start new translation"
+    $ git add pt-BR/*.po
+    $ git commit -m "pt-BR: Start new translation"
 
 Then add a pt-BR/README file where you put:
 - the name and email of the (current) translation coordinator
@@ -97,9 +100,10 @@ Then add a pt-BR/README file where you put:
 - translation choices that you made about the style to use, the
   vocabulary, etc.
 
-$ vim pt-BR/README
-$ git add pt-BR/README
-$ git commit -m "pt-BR: Add initial README file"
+
+    $ vim pt-BR/README
+    $ git add pt-BR/README
+    $ git commit -m "pt-BR: Add initial README file"
 
 You can certainly write that README file in your native language if you
 want but it's highly recommended to also have an English translation of
@@ -111,8 +115,9 @@ Translating PO files
 
 You're free to use the tool of your choice to complete the PO files. Once
 you have done enough, you can commit your updated PO files:
-$ git add pt-BR/*.po
-$ git commit -m "pt-BR: Updated translation"
+
+    $ git add pt-BR/*.po
+    $ git commit -m "pt-BR: Updated translation"
 
 Depending on the workflow used by your translation team, you can either
 push your work directly or make it available to your translation
